@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: ai-memory-api
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/aimemory}
+    username: ${DATABASE_USER:aimemory}
+    password: ${DATABASE_PASSWORD:aimemory_dev}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: ${PORT:8081}
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/plain
+    min-response-size: 1024
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-change-in-production-min-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:2592000000}
+  ai:
+    provider: ${AI_PROVIDER:groq}
+    groq:
+      api-key: ${GROQ_API_KEY:}
+      base-url: ${GROQ_BASE_URL:https://api.groq.com/openai/v1}
+      model: ${GROQ_MODEL:openai/gpt-oss-20b}
+      timeout-seconds: ${GROQ_TIMEOUT:60}
+      max-tokens: ${GROQ_MAX_TOKENS:2048}
+      temperature: ${GROQ_TEMPERATURE:0.3}
+
+logging:
+  level:
+    root: INFO
+    com.aimemory: ${LOG_LEVEL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

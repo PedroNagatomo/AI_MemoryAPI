@@ -1,0 +1,43 @@
+{
+    "name": "aimemory-sdk",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Official TypeScript SDK for AI Memory API — persistent memory for LLM applications",
+    "keywords": [
+        "ai",
+        "memory",
+        "llm",
+        "chatbot",
+        "context",
+        "sdk"
+    ],
+    "homepage": "https://github.com/PedroNagatomo/ai-memory-api",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/PedroNagatomo/ai-memory-api.git",
+        "directory": "sdk/typescript"
+    },
+    "license": "MIT",
+    "author": "Pedro Nagatomo",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+        "prepublishOnly": "npm run clean && npm run build",
+        "example": "tsx examples/quickstart.ts"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "typescript": "^5.5.0",
+        "tsx": "^4.0.0"
+    }
+}
