@@ -3,8 +3,6 @@ import { AIMemoryClient } from './client.js';
 import {
   AuthenticationError,
   NotFoundError,
-  RateLimitError,
-  ServerError,
   ValidationError,
 } from './errors.js';
 
