@@ -5,6 +5,7 @@ import com.aimemory.entity.TenantUsage;
 import com.aimemory.repository.TenantUsageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -25,19 +26,29 @@ public class UsageService {
     /**
      * Retorna (ou cria) o registro de uso do mês atual para o tenant.
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public TenantUsage getOrCreateCurrent(Tenant tenant) {
         String period = currentPeriod();
-        return usageRepository.findByTenantIdAndPeriod(tenant.getId(), period)
-                .orElseGet(() -> createNew(tenant, period));
-    }
 
-    /**
-     * Retorna o uso atual sem criar (útil pra leitura).
-     */
-    public TenantUsage getCurrent(Tenant tenant) {
-        return usageRepository.findByTenantIdAndPeriod(tenant.getId(), currentPeriod())
-                .orElse(null);
+        // Fast path: já existe
+        var existing = usageRepository.findByTenantIdAndPeriod(tenant.getId(), period);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        // Slow path: tentar criar, se outro thread já criou, pegar o que existe
+        try {
+            TenantUsage usage = TenantUsage.builder()
+                    .tenant(tenant)
+                    .period(period)
+                    .build();
+            return usageRepository.saveAndFlush(usage);
+        } catch (DataIntegrityViolationException e) {
+            log.debug("⚠️ Race condition detectada, buscando registro existente");
+            return usageRepository.findByTenantIdAndPeriod(tenant.getId(), period)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Não foi possível criar nem recuperar TenantUsage", e));
+        }
     }
 
     /**
@@ -95,10 +106,15 @@ public class UsageService {
         try {
             TenantUsage usage = getOrCreateCurrent(tenant);
             usage.incrementApiCalls();
-            usageRepository.save(usage);
+            usageRepository.saveAndFlush(usage);   // ← flush imediato
         } catch (Exception e) {
             log.warn("⚠️ Falha ao registrar api call: {}", e.getMessage());
         }
+    }
+
+    public TenantUsage getCurrent(Tenant tenant) {
+        return usageRepository.findByTenantIdAndPeriod(tenant.getId(), currentPeriod())
+                .orElse(null);
     }
 
     public String currentPeriod() {
