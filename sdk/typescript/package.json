@@ -30,7 +30,9 @@
         "build": "tsc",
         "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
         "prepublishOnly": "npm run clean && npm run build",
-        "example": "tsx examples/quickstart.ts"
+        "example": "tsx examples/quickstart.ts",
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "engines": {
         "node": ">=18"
@@ -38,6 +40,7 @@
     "devDependencies": {
         "@types/node": "^22.0.0",
         "typescript": "^5.5.0",
-        "tsx": "^4.0.0"
+        "tsx": "^4.0.0",
+        "vitest": "^2.1.0"
     }
 }
